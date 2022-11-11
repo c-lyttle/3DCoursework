@@ -12,7 +12,7 @@ Problem 3 was fixed by exporting the whole scene as a asingle mesh from within b
 And finally problem 4 was fixed by manually re-adding the roughness ad metallic values to the materials fro within unreal, I also had to completely change the materials for the bottle and fluid within as the translucent glass didnt carry across at all. This however allowed me to play wtht the refractive index of the glass within Unreal which I think made an interestig effect in the final output.
 
 Animations:
-In order to animate my scene I used the 
+In order to animate my scene I used the sequencer and 'level sequence' objects (under the animation drop down) to create different shots for my scene. I keyframed in different points for each shot so that the camera would fly correctly between positions, I also alterred the speed at which the keyframes were reached in order to change the spacing of the video. I then put each of these level sequences into one master level sequence and added a fade track which allowed a 'fade to black' inbetween scenes so that they didnt jump abruptly.
 
 Rendering Settings:
-
+The camera I used for each shot was the 16:9 DSLR as it gave a modern sleek look, as well as having many lenses to choose from, for most shots I used the 50mm lens as it allowed the models to stay in focus for the shots I wanted. I exported in 16:9 also as this is a very common format, and in 1080p as that is the resolution of my monitor at home.
