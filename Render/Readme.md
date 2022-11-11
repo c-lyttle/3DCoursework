@@ -11,3 +11,5 @@ I wanted my output to be a intriguing poster whilst still being minimal. I went 
 
 Render Settings:
 As I have a higher end GPU I used cycles rather than eevee so I could take full advantage of it, I set device to 'GPU compute' so it wasn't using my slower CPU. I changed the colour management settings to high contrast and upped the number of light bounces calculated in the render in an attempt to make the reflections and refractions better looking. Another minor detail is that I turned down the max samples in order to speed up rendering time as changing thesamples from 4096 to 1024 didn't seem to hurt the output render to my eyes.
+
+NOTE: The reference images for each model can be found in the appendices
