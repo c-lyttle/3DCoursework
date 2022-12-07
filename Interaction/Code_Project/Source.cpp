@@ -234,7 +234,8 @@ void startup()
 	cout << "RENDERER: " << (char *)glGetString(GL_RENDERER) << endl;	
 
 	cout << endl << "Loading content..." << endl;	
-	content.LoadGLTF("assets/1911.gltf");
+	content.LoadGLTF("assets/1911body.gltf");
+	//content.LoadGLTF("assets/1911slide.gltf");
 
 	pipeline.CreatePipeline();
 	pipeline.LoadShaders("shaders/vs_model.glsl", "shaders/fs_model.glsl");
@@ -244,13 +245,14 @@ void startup()
 	modelRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	// A few optimizations.
+	
 	glFrontFace(GL_CCW);
 	glCullFace(GL_BACK);
 	glEnable(GL_CULL_FACE);
-
+	
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-
+	
 	// Get the correct size in pixels - E.g. if retina display or monitor scaling
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 
@@ -267,8 +269,8 @@ void update()
 	if (keyStatus[GLFW_KEY_DOWN]) modelRotation.x -= 0.05f;
 	if (keyStatus[GLFW_KEY_W]) modelPosition.z += 0.10f;
 	if (keyStatus[GLFW_KEY_S]) modelPosition.z -= 0.10f;
-	if (keyStatus[GLFW_KEY_D]) modelPosition.y += 0.10f;
-	if (keyStatus[GLFW_KEY_A]) modelPosition.y -= 0.10f;
+	if (keyStatus[GLFW_KEY_D]) modelPosition.x += 0.10f;
+	if (keyStatus[GLFW_KEY_A]) modelPosition.x -= 0.10f;
 
 	if (keyStatus[GLFW_KEY_R]) pipeline.ReloadShaders();
 
@@ -348,7 +350,7 @@ void ui()
 	ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
 	bool *p_open = NULL;
 	if (ImGui::Begin("Info", nullptr, window_flags)) {
-		ImGui::Text("About: 3D Graphics and Animation 2022"); // ImGui::Separator();
+		ImGui::Text("M1911 Pistol - Interactive Demonstration"); // ImGui::Separator();
 		ImGui::Text("Performance: %.3fms/Frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Text("Pipeline: %s", pipeline.pipe.error?"ERROR":"OK");
 	}
