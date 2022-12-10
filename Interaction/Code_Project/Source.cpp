@@ -100,6 +100,8 @@ Debugger debugger;									// Add one debugger to use for callbacks ( Win64 - op
 
 vec3 modelPosition;									// Model position
 vec3 modelRotation;									// Model rotation
+vec3 modelPosition2;									// Model position
+vec3 modelRotation2;									// Model rotation
 
 
 int main()
@@ -249,7 +251,9 @@ void startup()
 
 	// Start from the centre
 	modelPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-	modelRotation = glm::vec3(1.5f, 1.6f, 0.0f);
+	modelRotation = glm::vec3(1.5f, 1.5f, 0.0f);
+	modelPosition2 = glm::vec3(0.0f, 0.0f, 0.0f);
+	modelRotation2 = glm::vec3(1.5f, 1.5f, 0.0f);
 
 	// A few optimizations.
 	
@@ -282,12 +286,15 @@ void update()
 
 	if (keyStatus[GLFW_KEY_R]) pipeline.ReloadShaders();
 
-	if (shootCount == 2) {
-		modelRotation -= 0.5f;
-		shootCount = 0;
+	if (shootCount == 9) {
+		shootCount == 0;
 	}
-	if (shootCount == 1) {
-		modelRotation += 0.5f;
+	if (shootCount == 5 || shootCount == 6 || shootCount == 7 || shootCount == 8) {
+		modelRotation -= 0.1f;
+		shootCount += 1;
+	}
+	if (shootCount == 1 || shootCount == 2 || shootCount == 3 || shootCount == 4) {
+		modelRotation += 0.1f;
 		shootCount += 1;
 	}
 	
@@ -323,8 +330,8 @@ void render()
 									   cameraUp);					 // up
 
 	// Do some translations, rotations and scaling
-	// glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(modelPosition.x+rX, modelPosition.y+rY, modelPosition.z+rZ));
-	glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(modelPosition.x, modelPosition.y, modelPosition.z));
+	//glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	modelMatrix = glm::rotate(modelMatrix, modelRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 	modelMatrix = glm::rotate(modelMatrix, modelRotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(1.2f, 1.2f, 1.2f));
@@ -407,19 +414,23 @@ void onKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mo
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+//This function is ran when the mouse is clicked
 void onMouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 {
+		//if the left mouse button is clicked
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+			//set shoot to one, this is then used in the update() func
 			shootCount=1;
 		}
 }
 
+//This function is ran when the mouse moves, taken from (learnopengl.com)
 void onMouseMoveCallback(GLFWwindow *window, double x, double y)
 {
 	float xpos = static_cast<float>(x);
     float ypos = static_cast<float>(y);
 
-	if (firstMouse) // initially set to true
+	if (firstMouse)
 	{
 		lastX = xpos;
 		lastY = ypos;
@@ -427,7 +438,7 @@ void onMouseMoveCallback(GLFWwindow *window, double x, double y)
 	}
 
 	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+	float yoffset = lastY - ypos;
 	lastX = xpos;
 	lastY = ypos;
 
