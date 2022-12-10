@@ -87,8 +87,15 @@ auto currentTime = 0.0f;							// Framerate
 auto deltaTime = 0.0f;								// time passed
 auto lastTime = 0.0f;								// Used to calculate Frame rate
 
+float lastX = 400, lastY = 400;
+float yaw = -90.0f;
+float pitch = 0.0f;
+bool firstMouse = true;
+int shootCount = 0;
+
 Pipeline pipeline;									// Add one pipeline plus some shaders.
 Content content;									// Add one content loader (+drawing).
+Content content2;
 Debugger debugger;									// Add one debugger to use for callbacks ( Win64 - openGLDebugCallback() ) or manual calls ( Apple - glCheckError() ) 
 
 vec3 modelPosition;									// Model position
@@ -139,8 +146,8 @@ int main()
 	glfwSetMouseButtonCallback(window, onMouseButtonCallback); // Set callback for mouse click
 	glfwSetCursorPosCallback(window, onMouseMoveCallback);	   // Set callback for mouse move
 	glfwSetScrollCallback(window, onMouseWheelCallback);	   // Set callback for mouse wheel.
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);	// Set mouse cursor Fullscreen
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	// Set mouse cursor FPS fullscreen.
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);	// Set mouse cursor Fullscreen
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	// Set mouse cursor FPS fullscreen.
 
 	// Setup Dear ImGui and add context	-	https://blog.conan.io/2019/06/26/An-introduction-to-the-Dear-ImGui-library.html
 	IMGUI_CHECKVERSION();
@@ -235,14 +242,14 @@ void startup()
 
 	cout << endl << "Loading content..." << endl;	
 	content.LoadGLTF("assets/1911body.gltf");
-	//content.LoadGLTF("assets/1911slide.gltf");
+	content2.LoadGLTF("assets/1911slide.gltf");
 
 	pipeline.CreatePipeline();
 	pipeline.LoadShaders("shaders/vs_model.glsl", "shaders/fs_model.glsl");
 
 	// Start from the centre
 	modelPosition = glm::vec3(0.0f, 0.0f, 0.0f);
-	modelRotation = glm::vec3(0.0f, 0.0f, 0.0f);
+	modelRotation = glm::vec3(1.5f, 1.6f, 0.0f);
 
 	// A few optimizations.
 	
@@ -259,21 +266,31 @@ void startup()
 	// Calculate proj_matrix for the first time.
 	aspect = (float)windowWidth / (float)windowHeight;
 	projMatrix = glm::perspective(glm::radians(fovy), aspect, 0.1f, 1000.0f);
+
+
 }
 
 void update()
 {
-	if (keyStatus[GLFW_KEY_LEFT]) modelRotation.y += 0.05f;
-	if (keyStatus[GLFW_KEY_RIGHT]) modelRotation.y -= 0.05f;
-	if (keyStatus[GLFW_KEY_UP]) modelRotation.x += 0.05f;
-	if (keyStatus[GLFW_KEY_DOWN]) modelRotation.x -= 0.05f;
-	if (keyStatus[GLFW_KEY_W]) modelPosition.z += 0.10f;
-	if (keyStatus[GLFW_KEY_S]) modelPosition.z -= 0.10f;
-	if (keyStatus[GLFW_KEY_D]) modelPosition.x += 0.10f;
-	if (keyStatus[GLFW_KEY_A]) modelPosition.x -= 0.10f;
+	const float cameraSpeed = 4.0f * deltaTime;
+	if (keyStatus[GLFW_KEY_W]) cameraPosition += cameraSpeed * cameraFront;
+	if (keyStatus[GLFW_KEY_S]) cameraPosition -= cameraSpeed * cameraFront;
+	if (keyStatus[GLFW_KEY_D]) cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (keyStatus[GLFW_KEY_A]) cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (keyStatus[GLFW_KEY_SPACE]) cameraPosition += cameraSpeed * cameraUp;
+	if (keyStatus[GLFW_KEY_LEFT_CONTROL]) cameraPosition -= cameraSpeed * cameraUp;
 
 	if (keyStatus[GLFW_KEY_R]) pipeline.ReloadShaders();
 
+	if (shootCount == 2) {
+		modelRotation -= 0.5f;
+		shootCount = 0;
+	}
+	if (shootCount == 1) {
+		modelRotation += 0.5f;
+		shootCount += 1;
+	}
+	
 	// Start the Dear ImGui frame
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -285,8 +302,8 @@ void render()
 	glViewport(0, 0, windowWidth, windowHeight);
 
 	// Clear colour buffer
-	glm::vec4 inchyraBlue = glm::vec4(0.345f, 0.404f, 0.408f, 1.0f);
-	glm::vec4 backgroundColor = inchyraBlue;
+	glm::vec4 orange = glm::vec4(1.0f, 0.5f, 0.25f, 1.0f);
+	glm::vec4 backgroundColor = orange;
 	glClearBufferfv(GL_COLOR, 0, &backgroundColor[0]);
 
 	// Clear deep buffer
@@ -319,6 +336,7 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(pipeline.pipe.program, "proj_matrix"), 1, GL_FALSE, &projMatrix[0][0]);
 
 	content.DrawModel(content.vaoAndEbos, content.model);
+	content.DrawModel(content2.vaoAndEbos, content2.model);
 	
 	#if defined(__APPLE__)
 		glCheckError();
@@ -353,6 +371,8 @@ void ui()
 		ImGui::Text("M1911 Pistol - Interactive Demonstration"); // ImGui::Separator();
 		ImGui::Text("Performance: %.3fms/Frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Text("Pipeline: %s", pipeline.pipe.error?"ERROR":"OK");
+		ImGui::Text("Controls:");
+		ImGui::Text("Rise = Space, Fall = Left CTRL, Left = A,\nRight = D, Forward = W, Back = S");
 	}
 	ImGui::End();
 
@@ -389,12 +409,43 @@ void onKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mo
 
 void onMouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 {
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+			shootCount=1;
+		}
 }
 
 void onMouseMoveCallback(GLFWwindow *window, double x, double y)
 {
-	int mouseX = static_cast<int>(x);
-	int mouseY = static_cast<int>(y);
+	float xpos = static_cast<float>(x);
+    float ypos = static_cast<float>(y);
+
+	if (firstMouse) // initially set to true
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	const float sensitivity = 0.05f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+	yaw   += xoffset;
+	pitch += yoffset;  
+	if(pitch > 89.0f)
+  		pitch =  89.0f;
+	if(pitch < -89.0f)
+  		pitch = -89.0f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(direction);
 }
 
 void onMouseWheelCallback(GLFWwindow *window, double xoffset, double yoffset)
